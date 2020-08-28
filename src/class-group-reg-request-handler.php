@@ -303,16 +303,19 @@ class Group_Reg_Request_Handler {
 	}
 
 	private function send_mail_notify( $user_data ) {
-		$message = 'Следующие пользователи были зарегистрированы на ' . $_SERVER['HTTP_HOST'];
-
+		$message = "Следующие пользователи были зарегистрированы на {$_SERVER['HTTP_HOST']} \r\n";
 		foreach ( $user_data as $user ) {
-			$message .= "{$user['first_name']} {$user['last_name']}, логин: {$user['user_login']} пароль: {$user['user_pass']}" . PHP_EOL;
+			$message .= "{$user['first_name']} {$user['last_name']}, логин: {$user['user_login']}, пароль: {$user['user_pass']} \r\n";
 		}
 
-		$subject = 'Регистрация пользователей на ' . $_SERVER['HTTP_HOST'];
+		$subject = "Регистрация пользователей на {$_SERVER['HTTP_HOST']}";
+		$headers = array(
+			'From: ' . get_bloginfo('name') . "<noreply@{$_SERVER['HTTP_HOST']}>",
+			'content-type: text/plain',
+		);
 
-		wp_mail( get_option( 'admin_email' ), $subject, $message );
-		wp_mail( get_option( $this->data['corp-email'] ), $subject, $message );
+		wp_mail( get_option( 'admin_email' ), $subject, $message, $headers );
+		wp_mail( $this->data['corp-email'], $subject, $message, $headers );
 	}
 
 	/**
