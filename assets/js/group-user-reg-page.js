@@ -30,17 +30,16 @@ function registerUser() {
 		request.open('POST', document.querySelector('input[name="handler_url"]').value, true);
 
 		request.onreadystatechange = function () {
-			var data;
-
-			try {
-				data = JSON.parse(request.responseText);
-			}
-			catch (e) {
-				data = null;
-				console.error(e);
-			}
-
 			if (request.readyState == 4) {
+				var data;
+				try {
+					data = JSON.parse(request.responseText);
+				}
+				catch (e) {
+					data = null;
+					console.error(e);
+				}
+
 				if (request.status == 200) {
 					if (null !== data && data.success) {
 						alert("Пользователи зарегистрированы");
