@@ -4,14 +4,14 @@ Plugin Name: Групповая регистрация пользователе�
 Plugin URI: https://github.com/gekkone/wp-group-user-reg
 Description: Групповая регистрация пользователей, специально для сdopr.ru
 Зависимости: wp-amo-madex и sfwd-lms (плагины)
-Version: 1.0.0
+Version: 1.0.1
 Author: Gekkkone
 Author URI: https://github.com/gekkone
 */
 
-require __DIR__ . '/src/allow-cyrillic-username.php';
-require __DIR__ . '/src/class-group-reg-page.php';
-require __DIR__ . '/src/class-group-reg-request-handler.php';
+require_once __DIR__ . '/src/allow-cyrillic-username.php';
+require_once __DIR__ . '/src/class-group-reg-page.php';
+require_once __DIR__ . '/src/class-group-reg-request-handler.php';
 
 $user_group_reg_sub_menu = new Group_Reg_Page();
 $user_group_reg_sub_menu->init();
