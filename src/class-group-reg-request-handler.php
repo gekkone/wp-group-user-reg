@@ -27,6 +27,10 @@ class Group_Reg_Request_Handler {
 			return;
 		}
 
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( 'У вас нет прав для выполнения этого действия', 403 );
+		}
+
 		$this->data = json_decode( str_replace( '\\', '', $_POST['data'] ), true );
 		if ( json_last_error() !== JSON_ERROR_NONE ) {
 			error_log(
@@ -34,7 +38,7 @@ class Group_Reg_Request_Handler {
 				. PHP_EOL . 'Ошибка: ' . json_last_error_msg()
 			);
 
-			wp_send_json_error( 'В запросе переданы некорректные данные');
+			wp_send_json_error( 'В запросе переданы некорректные данные' );
 			return;
 		}
 
@@ -66,15 +70,17 @@ class Group_Reg_Request_Handler {
 			$error            = $this->reg_user( $user, $output_user_data );
 			if ( true !== $error ) {
 				$errors[] = $error;
-			} else {
-				$user_data[] = $output_user_data;
+				continue;
 			}
-		}
 
-		error_log("Завершение регистрации пользователей");
+			$user_data[] = $output_user_data;
+		}
 
 		if ( empty( $errors ) ) {
 			$wpdb->query( 'COMMIT' );
+
+			$this->send_mail_notify( $user_data );
+
 			wp_send_json_success();
 		} else {
 			$wpdb->query( 'ROLLBACK' );
@@ -157,8 +163,8 @@ class Group_Reg_Request_Handler {
 	 * @return true|string
 	 */
 	private function reg_user( $user, &$output_user_data ) {
-		$firstname = isset( $user['firstname'] ) ? sanitize_user( $user['firstname'] ) : '';
-		$lastname  = isset( $user['lastname'] ) ? sanitize_user( $user['lastname'] ) : '';
+		$firstname = isset( $user['firstname'] ) ? sanitize_user( $user['firstname'], true ) : '';
+		$lastname  = isset( $user['lastname'] ) ? sanitize_user( $user['lastname'], true ) : '';
 
 		if ( empty( $firstname ) || empty( $lastname ) ) {
 			return "Не удалось зарегистрировать пользователя не введено имя или фамилия: $firstname $lastname";
@@ -187,8 +193,8 @@ class Group_Reg_Request_Handler {
 			$result = wp_insert_user( $user_data );
 
 			if ( is_wp_error( $result ) && $result->get_error_code() !== 'existing_user_login' ) {
-				error_log(print_r($user_data, true));
-				return "Не удалось зарегистрировать пользователя $lastname $firstname - {$result->get_error_message()}";
+				error_log( print_r( $user_data, true ) );
+				return "Не удалось зарегистрировать пользователя $firstname $lastname - {$result->get_error_message()}";
 			}
 
 			++$iterator;
@@ -197,7 +203,18 @@ class Group_Reg_Request_Handler {
 		$user_id          = $result;
 		$output_user_data = $user_data;
 
-		$this->add_user_meta( $user_id, $user );
+		if ( ! empty( $this->data['enroll-course'] ) ) {
+			ld_update_course_access( $user_id, $this->data['enroll-course'] );
+		}
+
+		if ( ! $this->add_user_meta( $user_id, $user ) ) {
+			return "Не удалось сохранить дополнительные поля пользователя $firstname $lastname";
+		}
+
+		$error = $this->add_user_amo_crm( $user_data, $user );
+		if ( true !== $error ) {
+			return ! empty( $error ) ? $error : 'Не удалось зарегистрировать пользователя в Amo сrm';
+		}
 
 		return true;
 	}
@@ -205,11 +222,12 @@ class Group_Reg_Request_Handler {
 	private function add_user_meta( $user_id, $user_data ) {
 		$post = isset( $user_data['post'] ) ? sanitize_text_field( $user_data['post'] ) : '';
 		$meta = array(
-			'corpmail' => $this->data['corp-email'],
-			'phone'    => $this->data['phone'],
-			'company'  => $this->data['org-name'],
-			'town'     => $this->data['sity'],
-			'dolznost' => $post,
+			'corpmail'   => $this->data['corp-email'],
+			'phone'      => $this->data['phone'],
+			'company'    => $this->data['org-name'],
+			'company_id' => $this->data['org-id'],
+			'town'       => $this->data['sity'],
+			'dolznost'   => $post,
 		);
 
 		foreach ( $meta as $key => $value ) {
@@ -221,7 +239,7 @@ class Group_Reg_Request_Handler {
 		return true;
 	}
 
-	private function add_user_amo_crm( $user_id, $login, $firstname, $lastname, $meta ) {
+	private function add_user_amo_crm( $user_data, $user_meta ) {
 		$company_id = $this->data['org-id'];
 		if ( empty( $company_id ) ) {
 			return true;
@@ -239,7 +257,7 @@ class Group_Reg_Request_Handler {
 		}
 
 		$company             = json_decode( $res, true );
-		$name                = "$firstname $lastname";
+		$name                = "{$user_data['first_name']} {$user_data['last_name']}";
 		$responsible_user_id = $company['response']['contacts']['0']['responsible_user_id'];
 
 		// Mдя, знаю что не красиво, но это копипаста, желания разбираться ещё и с этой апихой никакого нет
@@ -249,7 +267,7 @@ class Group_Reg_Request_Handler {
 				'id'     => 129616,
 				'values' => array(
 					'0' => array(
-						'value' => $meta['dolznost'],
+						'value' => $user_meta['post'],
 					),
 				),
 			),
@@ -257,7 +275,7 @@ class Group_Reg_Request_Handler {
 				'id'     => 129664,
 				'values' => array(
 					'0' => array(
-						'value' => $login,
+						'value' => $user_data['user_login'],
 					),
 				),
 			),
@@ -265,7 +283,7 @@ class Group_Reg_Request_Handler {
 				'id'     => 129618,
 				'values' => array(
 					'0' => array(
-						'value' => $meta['phone'],
+						'value' => $this->data['phone'],
 						'enum'  => 303992,
 					),
 				),
@@ -281,11 +299,20 @@ class Group_Reg_Request_Handler {
 			),
 		);
 
-		$amo->create_lead( $name, array(), $custom_fields, $responsible_user_id, $company_id );
+		return $amo->create_lead( $name, array(), $custom_fields, $responsible_user_id, $company_id ) ? true : false;
 	}
 
 	private function send_mail_notify( $user_data ) {
+		$message = 'Следующие пользователи были зарегистрированы на ' . $_SERVER['HTTP_HOST'];
 
+		foreach ( $user_data as $user ) {
+			$message .= "{$user['first_name']} {$user['last_name']}, логин: {$user['user_login']} пароль: {$user['user_pass']}" . PHP_EOL;
+		}
+
+		$subject = 'Регистрация пользователей на ' . $_SERVER['HTTP_HOST'];
+
+		wp_mail( get_option( 'admin_email' ), $subject, $message );
+		wp_mail( get_option( $this->data['corp-email'] ), $subject, $message );
 	}
 
 	/**
@@ -297,9 +324,14 @@ class Group_Reg_Request_Handler {
 
 		$this->check_field( 'org-name', 'название организации', $errors, false );
 		$this->check_field( 'org-id', 'ID организации в AmoCrm', $errors, false );
-		$this->check_field( 'corp-email', 'корпоративный email', $errors );
 		$this->check_field( 'phone', 'телефон', $errors );
 		$this->check_field( 'sity', 'город', $errors );
+
+		$corp_email = isset( $this->data['corp-email'] ) ? $this->data['corp-email'] : '';
+		$this->data['corp-email'] = sanitize_email( $corp_email );
+		if ( empty( $this->data['corp-email'] ) ) {
+			$errors[] = 'Передан пустой или некоррктный корпортивный email';
+		}
 
 		return $errors;
 	}
