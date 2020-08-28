@@ -1,11 +1,11 @@
 jQuery('[name="enroll-course"]').chosen({ no_results_text: "Курс не найден: ", allow_single_deselect: true });
 
-const regUserPattern = document.querySelector('.reg-user-pattern');
+var regUserPattern = document.querySelector('.reg-user-pattern');
 
 init();
 
 function init() {
-	let regUser = cloneRegUser();
+	var regUser = cloneRegUser();
 
 	document.querySelector('.reg-users').appendChild(regUser);
 	checkRemoveUser();
@@ -14,23 +14,23 @@ function init() {
 }
 
 function registerUser() {
-	let commonFieldNames = ['org-name', 'corp-email', 'phone', 'sity', 'enroll-course', 'org-id'];
-	let data = serializeFormData(document, commonFieldNames);
+	var commonFieldNames = ['org-name', 'corp-email', 'phone', 'sity', 'enroll-course', 'org-id'];
+	var data = serializeFormData(document, commonFieldNames);
 	data['users'] = [];
 
-	let users = document.querySelectorAll('.reg-users .reg-user');
-	let userFields = ['firstname', 'lastname', 'post'];
+	var users = document.querySelectorAll('.reg-users .reg-user');
+	var userFields = ['firstname', 'lastname', 'post'];
 	users.forEach(function (regUser) {
-		let userData = serializeFormData(regUser, userFields);
+		var userData = serializeFormData(regUser, userFields);
 		data.users.push(userData);
 	});
 
 	if (document.querySelector('.empty-input') === null) {
-		let request = new XMLHttpRequest();
+		var request = new XMLHttpRequest();
 		request.open('POST', document.querySelector('input[name="handler_url"]').value, true);
 
 		request.onreadystatechange = function () {
-			let data;
+			var data;
 
 			try {
 				data = JSON.parse(request.responseText);
@@ -56,7 +56,7 @@ function registerUser() {
 			}
 		}
 
-		let formData = new FormData();
+		var formData = new FormData();
 		formData.append('_wpnonce', document.querySelector('input[name="_wpnonce"]').value);
 		formData.append('action', 'group_reg_user');
 		formData.append('data', JSON.stringify(data));
@@ -70,7 +70,7 @@ function registerUser() {
 
 
 function appendUser(event) {
-	let regUser = findParent(event.currentTarget, 'reg-user');
+	var regUser = findParent(event.currentTarget, 'reg-user');
 	if (null === regUser) {
 		return;
 	}
@@ -81,7 +81,7 @@ function appendUser(event) {
 }
 
 function removeUser(event) {
-	let regUser = findParent(event.currentTarget, 'reg-user');
+	var regUser = findParent(event.currentTarget, 'reg-user');
 
 	if (null !== regUser) {
 		regUser.remove();
@@ -91,8 +91,8 @@ function removeUser(event) {
 }
 
 function checkRemoveUser() {
-	let regUsers = document.querySelectorAll('.reg-users .reg-user');
-	let fistRemoveUserBtn = document.querySelector('.reg-user_control_remove');
+	var regUsers = document.querySelectorAll('.reg-users .reg-user');
+	var fistRemoveUserBtn = document.querySelector('.reg-user_control_remove');
 
 	if (regUsers.length > 1) {
 		fistRemoveUserBtn.removeAttribute('disabled');
@@ -108,7 +108,7 @@ function initControlButton(regUser) {
 }
 
 function cloneRegUser() {
-	let clone = regUserPattern.cloneNode(true);
+	var clone = regUserPattern.cloneNode(true);
 
 	clone.classList.remove('reg-user-pattern');
 	clone.removeAttribute('style');
@@ -131,12 +131,13 @@ function findParent(element, parentClassName) {
 }
 
 function serializeFormData(formElement, fields) {
-	let data = {};
+	var data = {};
 
-	fields.forEach((fieldName) => {
-		let input = formElement.querySelector(`*[name="${fieldName}"]`);
+	for (var i = 0; i < fields.length; ++i) {
+		var fieldName = fields[i];
+		var input = formElement.querySelector('*[name="' + fieldName + '"]');
 		if (input === null) {
-			console.debug(`Нет поля ${fieldName}`);
+			console.debug('Нет поля' + fieldName);
 			return;
 		}
 
@@ -150,7 +151,7 @@ function serializeFormData(formElement, fields) {
 		}
 
 		data[fieldName] = input.value;
-	});
+	}
 
 	return data;
 }
