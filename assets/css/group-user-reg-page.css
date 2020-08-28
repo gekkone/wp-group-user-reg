@@ -1,0 +1,54 @@
+.user-reg-base-info {
+	display: grid;
+	grid-template-columns: 170px 400px;
+	grid-template-rows: repeat(auto-fill, 26px);
+	grid-column-gap: 12px;
+	grid-row-gap: 10px;
+}
+
+.user-reg-base-info label {
+	text-align: right;
+	align-self: center;
+	font-style: italic;
+}
+
+.reg-users {
+	max-height: 500px;
+	overflow-y: auto;
+}
+
+.reg-user {
+	display: grid;
+	grid-template-columns: repeat(3, 215px) auto;
+	grid-column-gap: 14px;
+	margin-bottom: 7px;
+}
+
+.reg-user label {
+	margin-left: 1px;
+}
+
+.reg-user input {
+	margin-left: -1px;
+}
+
+.reg-user_controls {
+	align-self: end;
+	margin-bottom: 1px;
+}
+
+.reg-user_controls .button {
+	width: 25px;
+	height: 25px;
+	padding: 0;
+	margin-right: 5px;
+}
+
+.user-reg-button.button {
+	font-size: 16px;
+	margin-top: 60px;
+}
+
+.empty-input {
+	border: 1px solid #eb7676!important;
+}
