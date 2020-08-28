@@ -15,7 +15,7 @@ function acu_sanitize_user( $username, $raw_username, $strict ) {
 
 	// If strict, reduce to ASCII and Cyrillic characters for max portability.
 	if ( $strict ) {
-		$username = preg_replace( '|[^a-zа-я0-9 _.\-@]|iu', '', $username );
+		$username = preg_replace( '|[^a-zа-яё0-9 _.\-@]|iu', '', $username );
 	}
 
 	$username = trim( $username );
