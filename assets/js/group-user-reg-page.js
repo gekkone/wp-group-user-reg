@@ -29,20 +29,28 @@ function registerUser() {
 		let request = new XMLHttpRequest();
 		request.open('POST', document.querySelector('input[name="handler_url"]').value, true);
 
-		request.onreadystatechange = function() {
+		request.onreadystatechange = function () {
+			let data;
+
+			try {
+				data = JSON.parse(request.responseText);
+			}
+			catch (e) {
+				data = null;
+				console.error(e);
+			}
+
 			if (request.readyState == 4) {
 				if (request.status == 200) {
-					let data = JSON.parse(request.responseText);
-					if (data.success) {
+					if (null !== data && data.success) {
 						alert("Пользователи зарегистрированы");
+						location.reload();
 					}
 					else {
-						alert(data.data);
+						alert(data.data || 'Не удалось зарегистрировать пользователей');
 					}
-					// location.reload();
 				}
 				else {
-					let data = JSON.parse(request.responseText);
 					alert('Не удалось выполнить запрос.' + ('\n' + data.data || ''));
 				}
 			}
