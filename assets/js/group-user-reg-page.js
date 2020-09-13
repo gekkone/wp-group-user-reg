@@ -13,7 +13,7 @@ function init() {
 	document.querySelector('.user-reg-button').addEventListener('click', registerUser);
 }
 
-function registerUser() {
+function registerUser(e) {
 	var commonFieldNames = ['org-name', 'corp-email', 'phone', 'sity', 'enroll-course', 'org-id'];
 	var data = serializeFormData(document, commonFieldNames);
 	data['users'] = [];
@@ -26,9 +26,10 @@ function registerUser() {
 	});
 
 	if (document.querySelector('.empty-input') === null) {
+		e.currentTarget.setAttribute('sending', '');
+
 		var request = new XMLHttpRequest();
 		request.open('POST', document.querySelector('input[name="handler_url"]').value, true);
-
 		request.onreadystatechange = function () {
 			if (request.readyState == 4) {
 				var data;
@@ -65,6 +66,8 @@ function registerUser() {
 	else {
 		alert('Некоторые поля обязательны для заполнения, но не были заполнены. Пожалуйста заполните поля выделенные красной обводкой');
 	}
+
+	e.currentTarget.removeAttribute('sending');
 }
 
 
@@ -149,7 +152,22 @@ function serializeFormData(formElement, fields) {
 			}
 		}
 
-		data[fieldName] = input.value;
+		if (fieldName === 'enroll-course') {
+			var options = input.options;
+			var selectOptions = [];
+
+			for (var i = 0, count = options.length; i < count; ++i) {
+				opt = options[i];
+				if (opt.selected) {
+					selectOptions.push(opt.value);
+				}
+			}
+
+			data[fieldName] = selectOptions;
+		}
+		else {
+			data[fieldName] = input.value;
+		}
 	}
 
 	return data;

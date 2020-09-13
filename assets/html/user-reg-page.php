@@ -17,7 +17,7 @@
 		<input id="user-reg-input-city" class="required-input" name="sity" type="tel">
 
 		<label>Записаться на курс:</label>
-		<select name="enroll-course" data-placeholder="Выберите курс">
+		<select name="enroll-course" data-placeholder="Выберите курс" multiple>
 			<option value=""></option>
 			<?php foreach ( $courses as $course ) : ?>
 				<option value="<?php echo esc_attr( $course->ID ); ?>">

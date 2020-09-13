@@ -49,6 +49,11 @@
 	margin-top: 30px;
 }
 
+.user-reg-button[sending=""] {
+	background: url('../img/loading_spinner.gif') no-repeat right 5px center / 22px 22px !important;
+	padding-right: 30px;
+}
+
 .empty-input {
 	border: 1px solid #eb7676!important;
 }

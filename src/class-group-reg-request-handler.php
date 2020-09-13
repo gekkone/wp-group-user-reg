@@ -159,7 +159,8 @@ class Group_Reg_Request_Handler {
 
 	/**
 	 * Undocumented function
-	 * @param array<string, string> $user_data
+	 * @param array<string, string> $user
+	 * @param array<string, string> $output_user_data - данные зарегистрированного пользователя
 	 * @return true|string
 	 */
 	private function reg_user( $user, &$output_user_data ) {
@@ -203,8 +204,10 @@ class Group_Reg_Request_Handler {
 		$user_id          = $result;
 		$output_user_data = $user_data;
 
-		if ( ! empty( $this->data['enroll-course'] ) ) {
-			ld_update_course_access( $user_id, $this->data['enroll-course'] );
+		if ( ! empty( $this->data['enroll-course'] ) && is_array( $this->data['enroll-course'] ) ) {
+			foreach ( $this->data['enroll-course'] as $course ) {
+				ld_update_course_access( $user_id, $course );
+			}
 		}
 
 		if ( ! $this->add_user_meta( $user_id, $user ) ) {

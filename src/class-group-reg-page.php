@@ -68,7 +68,7 @@ class Group_Reg_Page {
 				'group-user-reg-page-script',
 				plugins_url( 'assets/js/group-user-reg-page.min.js', __DIR__ ),
 				array( 'chosen-js' ),
-				'1.0.0',
+				'1.1.0',
 				true
 			);
 
@@ -76,7 +76,7 @@ class Group_Reg_Page {
 				'group-user-reg-page-style',
 				plugins_url( 'assets/css/group-user-reg-page.min.css', __DIR__ ),
 				array(),
-				'1.0.0'
+				'1.1.0'
 			);
 		}
 	}
