@@ -31,26 +31,22 @@ class Group_Reg_Request_Handler {
 			wp_send_json_error( 'У вас нет прав для выполнения этого действия', 403 );
 		}
 
-		$this->data = json_decode( str_replace( '\\', '', $_POST['data'] ), true );
+		$this->data = json_decode( stripslashes( $_POST['data'] ), true );
 		if ( json_last_error() !== JSON_ERROR_NONE ) {
 			error_log(
 				'Не удалось обработать запрос, данные: ' . print_r( $_POST['data'] )
 				. PHP_EOL . 'Ошибка: ' . json_last_error_msg()
 			);
-
 			wp_send_json_error( 'В запросе переданы некорректные данные' );
-			return;
 		}
 
 		$errors = $this->check_common_data();
 		if ( ! empty( $errors ) ) {
 			wp_send_json_error( 'Некорректно заполнены поля: ' . PHP_EOL . join( PHP_EOL, $errors ) );
-			return;
 		}
 
 		if ( ! isset( $this->data['users'] ) || ! is_array( $this->data['users'] ) ) {
 			wp_send_json_error( 'Не получены данные по регистрируемым пользователям' );
-			return;
 		}
 
 		global $wpdb;
@@ -61,9 +57,9 @@ class Group_Reg_Request_Handler {
 
 		foreach ( $this->data['users'] as $user ) {
 			if ( ! is_array( $user ) ) {
-				wp_send_json_error( 'Не получены данные для одного из пользователей' );
 				$wpdb->query( 'ROLLBACK' );
-				return;
+
+				wp_send_json_error( 'Не получены данные для одного из пользователей' );
 			}
 
 			$output_user_data = array();
@@ -84,6 +80,7 @@ class Group_Reg_Request_Handler {
 			wp_send_json_success();
 		} else {
 			$wpdb->query( 'ROLLBACK' );
+
 			wp_send_json_error( 'Не удалось зарегистрировать пользователей: ' . PHP_EOL . join( PHP_EOL, $errors ) );
 		}
 	}
