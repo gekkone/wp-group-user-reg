@@ -333,7 +333,7 @@ class Group_Reg_Request_Handler {
 		$corp_email = isset( $this->data['corp-email'] ) ? $this->data['corp-email'] : '';
 		$this->data['corp-email'] = sanitize_email( $corp_email );
 		if ( empty( $this->data['corp-email'] ) ) {
-			$errors[] = 'Передан пустой или некоррктный корпортивный email';
+			$errors[] = 'Передан пустой или некоректный корпортивный email';
 		}
 
 		return $errors;
