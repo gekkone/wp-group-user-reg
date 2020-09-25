@@ -42,16 +42,22 @@ function registerUser(e) {
 				}
 
 				if (request.status == 200) {
-					if (null !== data && data.success) {
-						alert("Пользователи зарегистрированы");
-						location.reload();
+					if (null !== data) {
+						if (data.success) {
+							alert("Пользователи зарегистрированы");
+							location.reload();
+						}
+						else {
+							alert(data.data);
+						}
 					}
 					else {
-						alert(data.data || 'Не удалось зарегистрировать пользователей');
+						alert('Получен некорректный ответ сервера');
 					}
 				}
 				else {
-					alert('Не удалось выполнить запрос.' + ('\n' + data.data || ''));
+					alert('Не удалось выполнить запрос к серверу');
+					console.error(request);
 				}
 			}
 		}
