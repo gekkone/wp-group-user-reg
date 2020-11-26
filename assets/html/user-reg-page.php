@@ -8,7 +8,7 @@
 		<input id="user-reg-input-org-id" name="org-id" type="text">
 
 		<label for="user-reg-input-corp-email">Корпоративный Email:</label>
-		<input id="user-reg-input-corp-email" class="required-input" name="corp-email" type="text">
+		<input id="user-reg-input-corp-email" class="required-input" name="corp-email" type="email">
 
 		<label for="user-reg-input-phone">Телефон:</label>
 		<input id="user-reg-input-phone" class="required-input" name="phone" type="tel">
