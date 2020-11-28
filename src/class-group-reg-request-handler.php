@@ -89,7 +89,7 @@ class Group_Reg_Request_Handler {
 	 * Генерирует легко запоминающийся пароль
 	 * @param int $symbol_count - количество символов в пароле
 	 * @return string пароль
-	 * @todo Не является криптографически безопасной, т.к. используются псевдослучайные числовые значения
+	 * @todo Пароль не является криптографически безопасным, т.к. используются псевдослучайные числовые значения
 	 */
 	public function generate_password( $symbol_count ) {
 		$output = '';
@@ -155,7 +155,6 @@ class Group_Reg_Request_Handler {
 
 
 	/**
-	 * Undocumented function
 	 * @param array<string, string> $user
 	 * @param array<string, string> $output_user_data - данные зарегистрированного пользователя
 	 * @return true|string
@@ -170,6 +169,7 @@ class Group_Reg_Request_Handler {
 
 		$login          = $firstname . mb_substr( $lastname, 0, 1 );
 		$translit_login = transliterator_transliterate( 'Any-Latin; Latin-ASCII; Lower()', $login );
+		$hostname       = $this->hostaname();
 
 		$result    = null;
 		$iterator  = 0;
@@ -182,15 +182,24 @@ class Group_Reg_Request_Handler {
 		while ( null === $result || is_wp_error( $result ) ) {
 			if ( $iterator > 0 ) {
 				$user_data['user_login'] = "$login-$iterator";
-				$user_data['user_email'] = "$translit_login-$iterator@" . $_SERVER['HTTP_HOST'];
+				$user_data['user_email'] = "$translit_login-$iterator@" . $hostname;
 			} else {
 				$user_data['user_login'] = $login;
-				$user_data['user_email'] = "$translit_login@" . $_SERVER['HTTP_HOST'];
+				$user_data['user_email'] = "$translit_login@" . $hostname;
 			}
 
 			$result = wp_insert_user( $user_data );
 
-			if ( is_wp_error( $result ) && $result->get_error_code() !== 'existing_user_login' ) {
+			if ( is_wp_error( $result )
+				&& !in_array(
+					$result->get_error_code(),
+					array(
+						'existing_user_email',
+						'existing_user_login',
+					),
+					true
+				)
+			) {
 				error_log( print_r( $user_data, true ) );
 				return "Не удалось зарегистрировать пользователя $firstname $lastname - {$result->get_error_message()}";
 			}
@@ -304,14 +313,14 @@ class Group_Reg_Request_Handler {
 
 	private function send_mail_notify( $user_data ) {
 		$site_url = site_url();
-		$message = "Следующие пользователи были зарегистрированы на <a href=\"$site_url\">{$_SERVER['HTTP_HOST']}</a> <br>";
+		$message = "Следующие пользователи были зарегистрированы на <a href=\"$site_url\">{$this->hostaname()}</a> <br>";
 		foreach ( $user_data as $user ) {
 			$message .= "{$user['first_name']} {$user['last_name']}, <b>логин:</b> {$user['user_login']}, <b>пароль:</b> {$user['user_pass']} <br>";
 		}
 
-		$subject = "Регистрация пользователей на {$_SERVER['HTTP_HOST']}";
+		$subject = "Регистрация пользователей на {$this->hostaname()}";
 		$headers = array(
-			'From: ' . get_bloginfo('name') . "<noreply@{$_SERVER['HTTP_HOST']}>",
+			'From: ' . get_bloginfo('name') . "<noreply@{$this->hostaname()}>",
 			'content-type: text/html',
 		);
 
@@ -355,5 +364,9 @@ class Group_Reg_Request_Handler {
 		if ( $required && empty( $this->data[ $field_name ] ) ) {
 			$errors[] = "Передано пустое(й) $user_field_name";
 		}
+	}
+
+	private function hostaname() {
+		return parse_url( get_home_url(), PHP_URL_HOST );
 	}
 }
